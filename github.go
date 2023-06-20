@@ -31,10 +31,16 @@ func addGithubCommand() *cobra.Command {
 				return err
 			}
 
+			idemKey, err := cmd.Flags().GetString("idem-key")
+			if err != nil {
+				return err
+			}
+
 			if url == "" || secret == "" {
 				return errors.New("url and secret are required to emit github event")
 			}
 			fmt.Println("url", url)
+			fmt.Println("idem key", idemKey)
 			fmt.Println("secret", secret)
 
 			b, err := json.Marshal(body)
@@ -53,7 +59,7 @@ func addGithubCommand() *cobra.Command {
 				return fmt.Errorf("failed to generate hmac header new http request: %v", err)
 			}
 
-			setGithubHeaders(r, hmacHeader)
+			setGithubHeaders(r, hmacHeader, idemKey)
 
 			resp, err := http.DefaultClient.Do(r)
 			if err != nil {
@@ -80,6 +86,7 @@ func generateGithubHMAC(secret string, payload []byte) (string, error) {
 	return generateHMAC(secret, payload, "hex")
 }
 
-func setGithubHeaders(r *http.Request, hmacHeader string) {
+func setGithubHeaders(r *http.Request, hmacHeader, idemKey string) {
 	r.Header.Set("X-Hub-Signature-256", "sha256="+hmacHeader)
+	r.Header.Set("X-Idempotency-Key", idemKey)
 }

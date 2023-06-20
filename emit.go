@@ -32,8 +32,10 @@ func main() {
 func parsePersistentArgs(cmd *cobra.Command) {
 	var url string
 	var secret string
+	var idemKey string
 	cmd.PersistentFlags().StringVar(&url, "url", "", "URL to emit event to")
 	cmd.PersistentFlags().StringVar(&secret, "secret", "", "secret to use to encode hmac header")
+	cmd.PersistentFlags().StringVar(&idemKey, "idem-key", "", "Idempotency Key")
 
 	cmd.AddCommand(addShopifyCommand())
 	cmd.AddCommand(addGithubCommand())

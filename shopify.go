@@ -31,6 +31,11 @@ func addShopifyCommand() *cobra.Command {
 				return err
 			}
 
+			idemKey, err := cmd.Flags().GetString("idem-key")
+			if err != nil {
+				return err
+			}
+
 			secret, err := cmd.Flags().GetString("secret")
 			if err != nil {
 				return err
@@ -40,6 +45,7 @@ func addShopifyCommand() *cobra.Command {
 				return errors.New("url and secret are required to emit shopify event")
 			}
 			fmt.Println("url", url)
+			fmt.Println("idem key", idemKey)
 			fmt.Println("secret", secret)
 
 			b, err := json.Marshal(body)
@@ -58,7 +64,7 @@ func addShopifyCommand() *cobra.Command {
 				return fmt.Errorf("failed to generate hmac header new http request: %v", err)
 			}
 
-			setShopifyHeaders(r, hmacHeader)
+			setShopifyHeaders(r, hmacHeader, idemKey)
 
 			resp, err := http.DefaultClient.Do(r)
 			if err != nil {
@@ -102,8 +108,9 @@ func generateHMAC(secret string, payload []byte, encoding string) (string, error
 	}
 }
 
-func setShopifyHeaders(r *http.Request, hmacHeader string) {
+func setShopifyHeaders(r *http.Request, hmacHeader string, idemKey string) {
 	r.Header.Set("X-Shopify-Topic", "orders/create")
+	r.Header.Set("X-Idempotency-Key", idemKey)
 	r.Header.Set("X-Shopify-Hmac-SHA256", hmacHeader)
 	r.Header.Set("X-Shopify-Shop-Domain", "emit-test-domain")
 	r.Header.Set("X-Shopify-API-Version", "2022-07")
